@@ -86,7 +86,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
   	
   	for(int j=0; j<particles.size(); j++){
   		LandmarkObs predicted_measurement = predicted[j];
-  		distance = dist(observation.x, observation.y, predicted_measurement.x, predicted_measurement.y);
+  		float distance = dist(observation.x, observation.y, predicted_measurement.x, predicted_measurement.y);
   		if (distance < min_distance){
   			min_distance = distance;
   			landmark_id = predicted_measurement.id;
@@ -129,13 +129,14 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
   	// Get coordinates for each landmark
   	for (int k=0; k<map_landmarks.landmark_list.size(); k++){
-  		int l_id = map_landmarks.landmark_list[k].id_i;
-  		double l_x = map_landmarks.landmark_list[k].x_f;
-  		double l_y = map_landmarks.landmark_list[k].y_f;
+  		LandmarkObs current_landmark = map_landmarks.landmark_list[k];
+  		int l_id = current_landmark.id_i;
+  		double l_x = current_landmark.x_f;
+  		double l_y = current_landmark.y_f;
 
   		// Choose landmarks within sensor range of particle
   		if (fabs(l_x - x) <= sensor_range && fabs(l_y - y) <= sensor_range){
-  			predicted_landmarks.push_back(map_landmarks.landmark_list[k]);
+  			predicted_landmarks.push_back(current_landmark);
   		}
   	}
   	// Data Associations
@@ -146,7 +147,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   		int t_id = transformed_observations[l].id;
   		double t_x = transformed_observations[l].x;
   		double t_y = transformed_observations[l].y;
-  		double p_x;
   		double p_y;
 
   		// Get coordinates of the predicted landmark for the transformed observation
