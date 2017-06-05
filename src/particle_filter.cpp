@@ -51,11 +51,11 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 void ParticleFilter::prediction(double delta_t, double std_pos[],
                                 double velocity, double yaw_rate) {
   // Add measurements to each particle and add random Gaussian noise
-	normal_distribution<double> dist_x(x, std_pos[0]);
-  normal_distribution<double> dist_y(y, std_pos[1]);
-  normal_distribution<double> dist_theta(theta, std_pos[2]);
+	normal_distribution<double> dist_x(0, std_pos[0]);
+  normal_distribution<double> dist_y(0, std_pos[1]);
+  normal_distribution<double> dist_theta(0, std_pos[2]);
 
-  for (int i; i<num_particles; i++){
+	for (int i; i<num_particles; i++){
   	if (fabs(yaw_rate) > 0.0001){
   		particles[i].x += velocity/yaw_rate*(sin(particles[i].theta+(yaw_rate*delta_t))-sin(particles[i].theta));
   		particles[i].y += velocity/yaw_rate*(cos(particles[i].theta)-cos(particles[i].theta+(yaw_rate*delta_t)));
@@ -82,7 +82,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
   	int landmark_id;
 
   	// Set minimum distance to the distance between first opbservation and first particle
-  	float min_distance = dist(observation.x, observation.y, predicted[i].x, predicted[i].y)
+  	float min_distance = dist(observation.x, observation.y, predicted[i].x, predicted[i].y);
   	
   	for(int j=0; j<particles.size(); j++){
   		LandmarkObs predicted_measurement = predicted[j];
@@ -128,7 +128,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   	vector<LandmarkObs> predicted_landmarks;
 
   	// Get coordinates for each landmark
-  	for (int k=0; k<map_landmarks.landmark_list; k++){
+  	for (int k=0; k<map_landmarks.landmark_list.size(); k++){
   		int l_id = map_landmarks.landmark_list[k].id_i;
   		double l_x = map_landmarks.landmark_list[k].x_f;
   		double l_y = map_landmarks.landmark_list[k].y_f;
@@ -150,10 +150,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   		double p_y;
 
   		// Get coordinates of the predicted landmark for the transformed observation
-  		for (int m=0; m<predicted_landmarks.size(), m++){
-  			if (predicted_landmarks[m].id == t_id)
+  		for (int m=0; m<predicted_landmarks.size(); m++){
+  			if (predicted_landmarks[m].id == t_id){
   				p_x = predicted_landmarks[m].x;
   				p_y = predicted_landmarks[m].y;
+  			}
   		}
   		// Calculate each weight using a mult-variate Gaussian distribution
   		double w = 1/(2*M_PI*std_landmark[0]*std_landmark[1]) *
