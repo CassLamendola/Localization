@@ -75,22 +75,38 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
                                      std::vector<LandmarkObs>& observations) {
   // Find the predicted measurement that is closest to each observed measurement
-  
-  // Assign the observed measurement to this particular landmark.
+  for (int i=0; i<observations.size(); i++){
+  	LandmarkObs observation = observations[i];
 
-  // NOTE: this method will NOT be called by the grading code. But you will
-  // probably find it useful to
-  // implement this method and use it as a helper during the updateWeights
-  // phase.
+  	// Keep track of id for closest measurements
+  	int landmark_id;
+
+  	// Set minimum distance to the distance between first opbservation and first particle
+  	float min_distance = dist(observation.x, observation.y, predicted[i].x, predicted[i].y)
+  	
+  	for(int j=0; j<particles.size(); j++){
+  		LandmarkObs predicted_measurement = predicted[j];
+  		distance = dist(observation.x, observation.y, predicted_measurement.x, predicted_measurement.y);
+  		if (distance < min_distance){
+  			min_distance = distance;
+  			landmark_id = predicted_measurement.id;
+  		}
+  	}
+  	// Assign the observed measurement to this particular landmark
+  	observations[i].id = landmark_id;
+  }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                                    std::vector<LandmarkObs> observations,
                                    Map map_landmarks) {
-  // TODO: Update the weights of each particle using a mult-variate Gaussian
-  // distribution. You can read
+  // Update the weights of each particle using a mult-variate Gaussian distribution
+  
+
+  // You can read
   //   more about this distribution here:
   //   https://en.wikipedia.org/wiki/Multivariate_normal_distribution
+  
   // NOTE: The observations are given in the VEHICLE'S coordinate system. Your
   // particles are located
   //   according to the MAP'S coordinate system. You will need to transform
