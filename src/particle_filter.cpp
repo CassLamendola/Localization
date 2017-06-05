@@ -155,33 +155,32 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   				p_x = predicted_landmarks[m].x;
   				p_y = predicted_landmarks[m].y;
   		}
-  		// Calculate each weight
-  		double mu = sqrt(pow(p_x-t_x, 2) + pow(p_y-t_y, 2))
-  		double w = exp(-(pow(mu, 2)))
+  		// Calculate each weight using a mult-variate Gaussian distribution
+  		double w = 1/(2*M_PI*std_landmark[0]*std_landmark[1]) *
+  							exp(-(1/2)*((pow(p_x-t_x, 2)/std_landmark[0]) +
+  								(pow(p_y-t_y, 2)/std_landmark[1]) -
+  								(2*(p_x-t_x)*(p_y-t_y)/(sqrt(std_landmark[0])*sqrt(std_landmark[1])))));
   		particles[i].weight *= w;
   	}
-
   }
 
-  // You can read
-  //   more about this distribution here:
-  //   https://en.wikipedia.org/wiki/Multivariate_normal_distribution
-  
-  // NOTE: The observations are given in the VEHICLE'S coordinate system. Your
-  // particles are located
-  //   according to the MAP'S coordinate system. You will need to transform
-  //   between the two systems. Keep in mind that this transformation requires
-  //   both rotation AND translation (but no scaling). The following is a good
-  //   resource for the theory:
-  //   https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
-  //   and the following is a good resource for the actual equation to implement
-  //   (look at equation 3.33 http://planning.cs.uiuc.edu/node99.html
+  // More about this distribution here (Bivariate case):
+  // https://en.wikipedia.org/wiki/Multivariate_normal_distribution
 }
 
 void ParticleFilter::resample() {
-  // TODO: Resample particles with replacement with probability proportional to
-  // their weight. NOTE: You may find std::discrete_distribution helpful here.
-  //   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+	// Create discrete distribution for weights
+  discrete_distribution<> index(weights.begin(), weights.end());
+
+  // Store resampled particles
+  vector<Particle> resampled_particles;
+
+  // Resample particles with replacement with probability proportional to their weight
+  for (int i=0; i<num_particles; i++){
+  	resampled_particles.push_back(particles[index(gen)]);
+  }
+  // Save resampled particles
+  particles = resampled_particles;
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle,
