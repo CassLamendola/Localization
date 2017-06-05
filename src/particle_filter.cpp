@@ -102,6 +102,66 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                                    Map map_landmarks) {
   // Update the weights of each particle using a mult-variate Gaussian distribution
   
+	// Get coordinates of each particle
+  for (int i=0; i<num_particles; i++){
+  	double x = particles[i].x;
+  	double y = particles[i].y;
+  	double theta = particles[i].theta;
+
+  	// Store transformed points
+  	vector<LandmarkObs> transformed_observations;
+
+  	// Transform points from vehicle's coordinate system to map's coordinate system
+  	for (int j=0; j<observations.size(); j++){
+  		double t_x = (observations[j].x*cos(theta)) + (observations[j].y*sin(theta)) + x;
+  		double t_y = (observations[j].y*cos(theta)) - (observations[j].x*sin(theta)) + y;
+  		
+  		// Store id and coordinates for transformed point
+  		LandmarkObs transformed_observation;
+  		transformed_observation.id = observations[j].id;
+  		transformed_observation.x = t_x;
+  		transformed_observation.y = t_y;
+  		
+  		transformed_observations.push_back(transformed_observation);
+  	}
+  	// Store locations of predicted landmarks that are inside the sensor range of the particle
+  	vector<LandmarkObs> predicted_landmarks;
+
+  	// Get coordinates for each landmark
+  	for (int k=0; k<map_landmarks.landmark_list; k++){
+  		int l_id = map_landmarks.landmark_list[k].id_i;
+  		double l_x = map_landmarks.landmark_list[k].x_f;
+  		double l_y = map_landmarks.landmark_list[k].y_f;
+
+  		// Choose landmarks within sensor range of particle
+  		if (fabs(l_x - x) <= sensor_range && fabs(l_y - y) <= sensor_range){
+  			predicted_landmarks.push_back(map_landmarks.landmark_list[k]);
+  		}
+  	}
+  	// Data Associations
+  	dataAssociation(predicted_landmarks, transformed_observations);
+
+  	// Get coordinates of each transformed observation
+  	for (int l=0; l<observations.size(); l++){
+  		int t_id = transformed_observations[l].id;
+  		double t_x = transformed_observations[l].x;
+  		double t_y = transformed_observations[l].y;
+  		double p_x;
+  		double p_y;
+
+  		// Get coordinates of the predicted landmark for the transformed observation
+  		for (int m=0; m<predicted_landmarks.size(), m++){
+  			if (predicted_landmarks[m].id == t_id)
+  				p_x = predicted_landmarks[m].x;
+  				p_y = predicted_landmarks[m].y;
+  		}
+  		// Calculate each weight
+  		double mu = sqrt(pow(p_x-t_x, 2) + pow(p_y-t_y, 2))
+  		double w = exp(-(pow(mu, 2)))
+  		particles[i].weight *= w;
+  	}
+
+  }
 
   // You can read
   //   more about this distribution here:
